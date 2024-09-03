@@ -63,6 +63,57 @@ The different columns of diagonal represent different divided differences.
     return polcoef, diagonal
 
 
+def new_divdif(allz, new_fz, diagonal_in): # New divided difference computation
+    """
+The function computes additional divided difference coefficients for a Newton
+interpolation, where several divided differences have already been
+computed. Applies when in addition to an existing set of sampling points,
+several new samplings are given. The new divided differences are computed
+from the new samplings and an existing diagonal in the divided difference table.
+Input: 
+allz (1D ndarray): Contains the all the sampling points, including the old ones.
+new_fz (ndarray): The function values at the new sampling points.
+    For a function which returns a single value: new_fz can be either a 1D ndarray or a
+    2D ndarray with dimensions (1,N), where N is the number of interpolation points.
+    For a function which returns multiple values: new_fz is a 2D ndarray, where
+    function values of different sampling points are represented by different columns.
+diagonal_in (ndarray): The last diagonal of the divided difference table, used for
+computation of the last old divided difference.
+Output:
+polcoef (ndarray): The coefficients of the Newton basis polynomials for the Newton
+interpolation.
+diagonal_out: The last diagonal, for continuation of the process to higher orders,
+if necessary.
+For a 1D new_fz, polcoef, diagonal_in and diagonal_out are 1D ndarrays.
+For a 2D new_fz, polcoef, diagonal_in and diagonal_out are 2D ndarrays. The different columns of
+polcoef represent the coefficients of different Newton basis polynomials.
+The different columns of diagonal_in and diagonal_out represent different divided differences.
+"""
+    new_fz_is_1D = new_fz.ndim == 1
+    if new_fz_is_1D:
+        # The program is built for a 2D new_fz:
+        new_fz = new_fz[np.newaxis, :]
+        diagonal_in = diagonal_in[np.newaxis, :]
+    dim, Nnewpoints = new_fz.shape
+    Noldpoints = diagonal_in.shape[1]
+    Npoints = Noldpoints + Nnewpoints
+    output_type = (allz[0] + new_fz[0, 0] + 0.).dtype.type
+    polcoef = np.empty((dim, Nnewpoints), dtype=output_type, order='F')
+    diagonal_out = np.c_[diagonal_in, np.empty((dim, Nnewpoints), dtype=output_type, order='F')]
+    for coefi in range(Noldpoints, Npoints):
+        diagonal_out[:, coefi] = new_fz[:, coefi - Noldpoints]
+        for dtermi in range(coefi - 1, -1, -1):
+            # diagonal_out[:, dtermi] belongs to the previous diagonal.
+            # diagonal_out[:, dtermi + 1] belongs to the new diagonal.
+            diagonal_out[:, dtermi] = (diagonal_out[:, dtermi + 1] - diagonal_out[:, dtermi])/(allz[coefi] - allz[dtermi])
+        polcoef[:, coefi - Noldpoints] = diagonal_out[:, 0]
+    if new_fz_is_1D:
+        # Preparing a 1D output:
+        polcoef = np.squeeze(polcoef)
+        diagonal_out = np.squeeze(diagonal_out)
+    return polcoef, diagonal_out
+
+
 def dvd2fun(sp, polcoef, resultp):
     """
 The program computes the Newton interpolation polynomial of a function from its divided 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Functions for a Chebishev polynomial approximation.
+Functions for a Chebyshev polynomial approximation.
 Author: Ido Schaefer
 """
 import numpy as np
@@ -40,6 +40,29 @@ def chebcM(fM): # Chebyshev coefficient computation from sampling points
     C = dct(fM, axis = 0)/N
     C[0, :] = C[0, :]/2
     return C
+
+def chebcbv(fv): # Chebyshev coefficient computation of a function sampled at the boundary including Chebyshev points
+    """
+The function computes the Chebychev coefficients of a
+function sampled at the Chebychev points that include the boundary of the
+domain.
+
+    Parameters
+    ----------
+    fv : 1D ndarray
+        The sampled values.
+
+    Returns
+    -------
+    1D ndarray
+        The Chebyshev coefficients.
+
+    """
+    N = fv.size - 1
+    c = dct(fv, type=1)/N
+    c[0] = c[0]/2
+    c[N] = c[N]/2
+    return c
 
 
 def chebc2result(Ccheb, xdomain, xresult): # Computation of the Chebyshev approximation from the coefficients
@@ -102,3 +125,72 @@ Let M be a view of the output ndarray; its columns M[:, k] represent the corresp
     for k in range(2, Ncheb):
         M[:, k] = 2*chebop(M[:, k-1]) - M[:, k-2]
     return M
+
+
+def cheb_pols(x, N):
+    """
+The function computes the Chebyshev polynomials up to order N, evaluated
+at values x. The computation is performed by the recursive definition of
+the Chebyshev polynomials.
+"""
+    if isinstance(x, np.ndarray):
+        Nx = x.size
+        allT = np.zeros((N + 1, Nx))
+        allT[0, :] = np.ones(Nx)
+        allT[1, :] = x
+        for Ti in range(2, N + 1):
+            allT[Ti, :] = 2*x*allT[Ti - 1, :] - allT[Ti - 2, :]
+    else:
+        # If x is a regular numeric variable:
+        allT = np.zeros(N + 1)
+        allT[0] = 1
+        allT[1] = x
+        for Ti in range(2, N + 1):
+            allT[Ti] = 2*x*allT[Ti - 1] - allT[Ti - 2]
+    return allT
+
+
+def cheb_rec_fun(prevCs, order_prev): # Calculation of the power coefficients of a Chebyshev polynomial
+    """
+The function computes the power coefficients of a particular Chebyshev
+polynomial from the power coefficients of the two previous orders.
+Intended for the use of the function Crecurrence.recurrence_coefs.
+Input:
+prevCs (2D ndarray): Containing the power coefficients of the two previous
+orders; each order is represented by a row, and each power is represented
+by a column. Column j represents the (j-1)'th power coefficients.
+order_prev (int): The order of prevCs; not in use, but necessary for the function
+recurrence_coefs.
+Output (1D ndarray): The power coefficients of the new Chebyshev polynomial.
+"""
+    N = prevCs.shape[1]
+    C = np.zeros(N)
+    C[1:N] = 2*prevCs[1, 0:(N - 1)]
+    C[0:(N - 2)] = C[0:(N - 2)] - prevCs[0, 0:(N - 2)]
+    return C
+
+
+def chebweights(N, lengthD): # Chebyshev integration weights for boundary including Chebyshev points
+    """
+The program computes the weights of the function values sampled on
+Chebyshev points that include the boundary, used for integration.
+For details, see Master's thesis (arXiv:1202.6520), Appendix B.5.
+Exact for a polynomial of degree N-1.
+
+    Parameters
+    ----------
+    N : int
+        The number of Chebyshev points.
+    lengthD : int/float
+        The length of the domain.
+
+    Returns
+    -------
+    1D ndarray
+        The integration weights
+
+    """
+    integT = np.zeros(N)
+    n_even = np.r_[0:N:2]
+    integT[n_even] = -1/(n_even**2 - 1)
+    return lengthD*chebcbv(integT)

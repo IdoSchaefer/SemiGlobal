@@ -60,7 +60,7 @@ Input:
 Cpoly: 2D ndarray; contains the vector coefficients of the polynomial set
 in separate columns.
 Cp2t: 2D ndarray; contains the conversion coefficients from the
-polynomial set to the Taylor polynomials (see, for example, NewtonIpln.r2Taylor4).
+polynomial set to the Taylor polynomials (see, for example, r2Taylor4).
 Output:
 Ctaylor: 2D ndarray; contains the Taylor-like coefficients, where
 different orders are represented by different columns.
@@ -78,7 +78,7 @@ different orders are represented by different columns.
 
 def guess0(ui, Np):
     """
-The function returns the zero'th order approximation for the guess of the first
+The function returns the zeroth order approximation for the guess of the first
 time-step.
 """
     return np.tile(ui[:, np.newaxis], (1, Np))
@@ -181,7 +181,7 @@ seperate columns; the vector coefficients of the Taylor time-polynomials
 in the solution equation
 timeM: 2D ndarray; represents the matrix of the t powers for the required time-points
 Vcheb: 2D ndarray; the T_k(\tilde{G})v_{Nt_ts} vectors, k=0,1,...,Nt_ts-1, in
-seperate columns
+separate columns
 Ccheb_f: 2D ndarray; the Chebyshev coefficients of \tilde{f}_{Nt_ts}(z, t) in the
 required time-points specified by timeM, as computed by the function f_chebC
 f_error: The estimated relative error of the computation of \tilde{f}_{Nt_ts}(G,t[Nt_ts - 1])v_vecs[:, Nkr];
@@ -588,7 +588,7 @@ following keys:
         history['conv_error'][tsi] = reldif
         history['niter'][tsi] = niter
         if tsi != 0:
-            allniter = allniter + niter;
+            allniter = allniter + niter
         else:
             if Arnoldi:
                 history['matvecs'] = niter*(Nt_ts*(1 + Gdiff_matvecs) + Nfm)

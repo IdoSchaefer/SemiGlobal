@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 22 10:42:04 2022
+Created on Sun Jul  7 13:30:41 2024
 
 @author: Ido Schaefer
 """
@@ -8,7 +8,7 @@ Created on Tue Mar 22 10:42:04 2022
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.linalg import norm
-from SGfuns import SemiGlobal
+from SG1funs import SemiGlobal1, SGdata
 from FourierGrid import Hpsi, xp_grid
 # The program tests the efficiency of Hillel Tal-Ezer's
 # semi-global propagator for a forced harmonic oscillator with an additional
@@ -35,17 +35,18 @@ def Gdiff_op(u1, t1, u2, t2):
     return -1j*(xcolumn*(np.cos(t1) - np.cos(t2)))*u1
 def ihfun(t):
     return np.exp(-xcolumn**2/2)*np.cos(t)
+dat = SGdata(13, 15, 10, 16)
 print('Semi-global Chebyshev algorithm:')
-U, history = SemiGlobal(Gop, Gdiff_op, 0, fi0, t, Nts, Nt_ts, Nfm, tol, ihfun, ev_domain=np.r_[-188*1j, 1j])
+U, history = SemiGlobal1(Gop, Gdiff_op, 0, fi0, t, Nts, Nt_ts, Nfm, tol, ihfun, ev_domain=np.r_[-188*1j, 1j], data=dat)
 print("The mean number of iterations per time-step:", history['mniter'])
 # (should be close to 1, for ideal efficiency)
 print('The number of matrix vector multiplications:', history['matvecs'])
 print('\nSemi-global Arnoldi algorithm:')
-Uar, history_ar = SemiGlobal(Gop, Gdiff_op, 0, fi0, t, Nts, Nt_ts, Nfm, tol, ihfun)
+Uar, history_ar = SemiGlobal1(Gop, Gdiff_op, 0, fi0, t, Nts, Nt_ts, Nfm, tol, ihfun, data=dat)
 print("The mean number of iterations per time-step:", history_ar['mniter'])
 # (should be close to 1, for ideal efficiency)
 print('The number of matrix vector multiplications:', history_ar['matvecs'])
-print('\nComputing error from the RK45 solution for a tiny tolerance parameter:')
+print('\nComputing error from the RK45 solution for a tiny tolerance parameter.')
 def RKfun(t, u):
     return -1j*Hpsi(K, V + x*np.cos(t), u) + np.exp(-x**2/2)*np.cos(t)
 solution = solve_ivp(RKfun, (0, T), fi0, method='RK45', t_eval=t, atol=1e-12, rtol=1e-11)
