@@ -46,3 +46,17 @@ the sake of numerical stability appear in Sec. 3.3.1).
 
 Some additional theoretical details on the computation of the f_m(z,t) functions appear in
 f_error.pdf.
+
+
+Update (3.9.2024): Version 1
+-----------------------------
+A new version of the algorithm was added. The main function is SemiGlobal1 in the module SG1funs.py.
+The main new features of the new code are the following:
+1. Accurate error estimations are available, replacing the old ones, most of which
+typically greatly overestimate the error.
+2. A new, reliable criterion for stability is used for the instability warnings, based on analysis.
+3. The criterion for convergence of the iterative process was replaced, based on the accurate
+error estimations of the convergence error.
+4. There is a better control of the algorithm options by the user.
+
+Examples for the usage of the new version are available in the folder examples/version1.
