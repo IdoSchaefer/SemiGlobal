@@ -13,6 +13,7 @@ ido.schaefer@gmail.com
 """
 
 import numpy as np
+import math
 from scipy.linalg import norm, eig
 from Chebyshev import chebc2result, vchebMop, chebweights
 from Arnoldi import createKrop, getRvKr
@@ -270,6 +271,10 @@ following keys:
         texp_cheap. However, in the case of odd Nt_ts the estimation is more
         expansive numerically. Not computed for odd Nt_ts if comp_texp_odd==False
         (the default is True).
+        texp_cheap_odd (float; for odd Nt_ts only): The estimated relative error 
+        resulting from the time-expansions in each time-step; more precise than
+        texp_cheap, but less safe - it might underestimate the error. Less
+        precise than texp_exact.
         fm (float): The estimated relative error resulting from the
         computation of the function of matrix.
         conv (float): The total estimated relative convergence error. It is computed
@@ -297,8 +302,10 @@ following keys:
         Problematic values are in the order of ~0.1-1 or higher.
     all_errors (dictionary): Contains the estimated errors for all the individual
     time-steps. It has the following keys:
-        texp_cheap (1D ndarray): The cheap time-expansion error estimation for all time-steps
-        texp_exact (1D ndarray): The exact time-expansion error estimation for all time-steps
+        texp_cheap, texp_exact, texp_cheap_odd (1D ndarray for all): The 
+        time-expansion error estimations for all time-steps (see the description
+        for the fields of the nested dictionary est_errors).
+         (1D ndarray): The exact time-expansion error estimation for all time-steps
         fm_error (1D ndarray): The function of matrix error estimation for all time-steps
         conv_error, conv_error_cheb, conv_error_texp, conv_error_fm (1D ndarray for all):
         The convergence error estimations for all time-steps (see the description
@@ -392,10 +399,11 @@ following keys:
         # For odd Nt_ts, the middle time-point is also in the middle of the
         # time-step:
         tmidi = Nt_ts//2
+        # For the exact time-expansion error computation; used also in a variant of
+        # the cheap estimation:
+        Etexp_factor_odd = 4*np.abs(Tts*(Nt_ts - 1)/(Nt_ts*(Nt_ts**2 - 4)*(Nt_ts - 4)))
         if comp_texp_odd:
-            # For the exact time-expansion error computation; performed
-            # only if specified by the field comp_texp_odd in options:
-            Etexp_factor_odd = 4*np.abs(Tts*(Nt_ts - 1)/(Nt_ts*(Nt_ts**2 - 4)*(Nt_ts - 4)))
+            # If the exact time-expansion error computation is performed:
             # The error estimaiton for odd Nt_ts requires two test points:
             texp_er_tpoints = np.array([(t_ts[tmidi] + t_ts[tmidi + 1])/2, (t_ts[tmidi] + t_ts[tmidi - 1])/2])
             # The indices of the test-points:
@@ -445,7 +453,7 @@ following keys:
     if comp_conv_cheb:
         history['all_errors']['conv_cheb'] = np.zeros(Nts)
     # Necessary for error estimation of f_{Nt_ts}(z, t):
-    factorialNt_ts = np.math.factorial(Nt_ts)
+    factorialNt_ts = math.factorial(Nt_ts)
     if not Arnoldi:
         # If the eigenvalue domain is specified, a Chebyshev approximation
         # for the function of matrix is employed.
@@ -803,12 +811,17 @@ following keys:
             Uguess[:, 1:total_Nt_ts] = Ufrom_vCheb1(v_vecs, timeMnext, Vcheb, Ccheb_f_next)
         if there_is_ih:
             s[:, 0] = s[:, Nt_ts - 1]
+    if not Nt_ts_is_even:
+        # A variant of the cheap estimation for odd Nt_ts only; in general
+        # more accurate than history['est_errors']['texp_cheap'], but less safe:
+        history['all_errors']['texp_cheap_odd'] = history['all_errors']['texp_cheap']*Etexp_factor_odd/Etexp_factor_cheap
+        history['est_errors']['texp_cheap_odd'] = history['all_errors']['texp_cheap_odd'].sum()
     if Nt_ts_is_even or comp_texp_odd:
         history['all_errors']['total'] =\
             history['all_errors']['texp_exact'] + history['all_errors']['fm'] + history['all_errors']['conv']
     else:
         history['all_errors']['total'] =\
-            history['all_errors']['texp_cheap'] + history['all_errors']['fm'] + history['all_errors']['conv']
+            history['all_errors']['texp_cheap_odd'] + history['all_errors']['fm'] + history['all_errors']['conv']
     history['est_errors']['texp_cheap'] = history['all_errors']['texp_cheap'].sum()
     if Nt_ts_is_even or comp_texp_odd:
         history['est_errors']['texp_exact'] = history['all_errors']['texp_exact'].sum()

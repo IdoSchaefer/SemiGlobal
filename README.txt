@@ -59,4 +59,4 @@ typically greatly overestimate the error.
 error estimations of the convergence error.
 4. There is a better control of the algorithm options by the user.
 
-Examples for the usage of the new version are available in the folder examples/version1.
+Examples for the application of the new version are available in the folder examples/version1.
