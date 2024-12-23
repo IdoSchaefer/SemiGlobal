@@ -305,7 +305,6 @@ following keys:
         texp_cheap, texp_exact, texp_cheap_odd (1D ndarray for all): The 
         time-expansion error estimations for all time-steps (see the description
         for the fields of the nested dictionary est_errors).
-         (1D ndarray): The exact time-expansion error estimation for all time-steps
         fm_error (1D ndarray): The function of matrix error estimation for all time-steps
         conv_error, conv_error_cheb, conv_error_texp, conv_error_fm (1D ndarray for all):
         The convergence error estimations for all time-steps (see the description
