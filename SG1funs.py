@@ -296,7 +296,7 @@ following keys:
         total (float): The total estimated error; it is the sum of the keys
         texp_exact, fm and conv. In case that texp_exact isn't computed, it is
         replaced by texp_cheap.
-        stab_factor (float/ndarray): The stability factor; it is a scalar for 
+        instab_factor (float/ndarray): The instability factor; it is a scalar for 
         the Chebyshev algorithm. For the Arnoldi algorithm it is an ndarray,
         where its value is computed separately for each time-step.
         Problematic values are in the order of ~0.1-1 or higher.
@@ -472,16 +472,16 @@ following keys:
         fztest = np.squeeze(f_fun(ztest, np.array([Tts]), Nt_ts, tol_f, factorialNt_ts))
         f_scalar_error = np.max(np.abs(chebc2result(Ccheb_f_ts[:, Nt_ts - 2], ev_domain, ztest) - fztest))
         # Stability factor:
-        history['stab_factor'] = f_scalar_error*np.max(np.abs(ev_domain))**Nt_ts/factorialNt_ts
+        history['instab_factor'] = f_scalar_error*np.max(np.abs(ev_domain))**Nt_ts/factorialNt_ts
         # Estimated stability criterion (a boolean variable):
-        instability = history['stab_factor']>0.1
+        instability = history['instab_factor']>0.1
         if instability:
             print('Warning: Instability in the propagation process may occur.')
     else:
         # For the Arnoldi algorithm, the stability test is performed in
         # each time step.
         instability = False
-        history['stab_factor'] = np.zeros(Nts)
+        history['instab_factor'] = np.zeros(Nts)
     # A boolean that indicates if the convergence has failed in at least one
     # time-step:
     conv_failure = False
@@ -705,11 +705,11 @@ following keys:
         if Arnoldi:
             # Stability factor computation:
             f_scalar_error = f_abs_error/norm(v_vecs[:, Nt_ts])
-            history['stab_factor'][tsi] = f_scalar_error*np.max(np.abs(eigval))**Nt_ts/factorialNt_ts
+            history['instab_factor'][tsi] = f_scalar_error*np.max(np.abs(eigval))**Nt_ts/factorialNt_ts
             if not instability:
             # If a possibility of instability hasn't been detected yet, the
             # stability criterion is checked:
-                instability = history['stab_factor'][tsi]>0.1
+                instability = history['instab_factor'][tsi]>0.1
                 if instability:
                     print(f'Warning: Instability in the propagation process may occur (detected in time step No. {tsi + 1}).')
         # Detection of the first appearance of convergence failure:
